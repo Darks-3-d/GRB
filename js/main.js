@@ -139,65 +139,72 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    // --- Reader Modal Logic (Global Scope) ---
+    // --- NEW READER LOGIC ---
     window.openReader = (comicId, chapterNum) => {
-        // --- THIS IS THE SCROLLING FIX ---
-        document.documentElement.classList.add('modal-open');
-        document.body.classList.add('modal-open');
+        document.body.classList.add('modal-open'); // Prevent background scroll
 
         const comic = allComics.find(c => c.id === comicId);
-        if (!comic) return;
-        
         const chapter = comic.chapters.find(ch => String(ch.chapter) === String(chapterNum));
-        if(!chapter) return;
+        if (!comic || !chapter) return;
 
         let currentPage = 0;
-        let readerMode = 'paged';
+        let readerMode = 'paged'; // Default mode
         
         const chapterTitleEl = document.getElementById('chapterTitle');
         const pageIndicatorEl = document.getElementById('pageIndicator');
+        const readerContainer = document.getElementById('readerContainer');
         const readerContentEl = document.getElementById('readerContent');
         const chapterSelectEl = document.getElementById('chapterSelect');
         const webtoonToggle = document.getElementById('webtoonToggle');
-        
-        chapterSelectEl.innerHTML = comic.chapters.map(ch => `<option value="${ch.chapter}" ${String(ch.chapter) === String(chapterNum) ? 'selected' : ''}>Chapter ${ch.chapter}</option>`).join('');
+        const pageNavButtons = document.getElementById('page-nav-buttons');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+
+        // Populate chapter dropdown
+        chapterSelectEl.innerHTML = comic.chapters.map(ch => 
+            `<option value="${ch.chapter}" ${String(ch.chapter) === String(chapterNum) ? 'selected' : ''}>Chapter ${ch.chapter}</option>`
+        ).join('');
         chapterSelectEl.onchange = (e) => openReader(comicId, e.target.value);
 
-        const displayPage = () => {
+        const updatePage = () => {
             if (readerMode === 'paged') {
+                readerContentEl.innerHTML = `<img src="${chapter.pages[currentPage]}" alt="Page ${currentPage + 1}" class="max-w-full h-auto object-contain mx-auto">`;
                 pageIndicatorEl.textContent = `Page ${currentPage + 1} of ${chapter.pages.length}`;
-                pageIndicatorEl.style.display = 'block';
-                document.getElementById('page-nav-buttons').style.display = 'flex';
-                readerContentEl.innerHTML = `<img src="${chapter.pages[currentPage]}" alt="Page ${currentPage + 1}" class="max-w-full h-auto object-contain">`;
+                prevPageBtn.disabled = currentPage === 0;
+                nextPageBtn.disabled = currentPage === chapter.pages.length - 1;
+                 prevPageBtn.classList.toggle('opacity-50', currentPage === 0);
+                nextPageBtn.classList.toggle('opacity-50', currentPage === chapter.pages.length - 1);
             }
         };
 
-        const displayWebtoon = () => {
-            pageIndicatorEl.style.display = 'none';
-            document.getElementById('page-nav-buttons').style.display = 'none';
-            readerContentEl.innerHTML = `<div class="flex flex-col items-center space-y-0">${chapter.pages.map(p => `<img src="${p}" alt="Page" class="w-full max-w-3xl">`).join('')}</div>`;
-        };
-        
         const switchMode = (mode) => {
             readerMode = mode;
             webtoonToggle.checked = (mode === 'webtoon');
-            if(mode === 'paged') displayPage(); else displayWebtoon();
+            readerContainer.scrollTop = 0; // Reset scroll on mode change
+
+            if (mode === 'webtoon') {
+                pageNavButtons.style.display = 'none';
+                readerContentEl.innerHTML = `<div class="flex flex-col items-center space-y-0">${chapter.pages.map(p => `<img src="${p}" alt="Page" class="w-full max-w-3xl">`).join('')}</div>`;
+            } else {
+                pageNavButtons.style.display = 'flex';
+                updatePage();
+            }
         };
 
         const closeReader = () => {
             readerModal.classList.add('hidden');
-             // --- THIS IS THE SCROLLING FIX ---
-            document.documentElement.classList.remove('modal-open');
             document.body.classList.remove('modal-open');
         };
 
+        // --- Event Listeners ---
         webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
         document.getElementById('closeReader').onclick = closeReader;
-        document.getElementById('prevPage').onclick = () => { if (currentPage > 0) { currentPage--; displayPage(); }};
-        document.getElementById('nextPage').onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; displayPage(); }};
-
+        prevPageBtn.onclick = () => { if (currentPage > 0) { currentPage--; updatePage(); }};
+        nextPageBtn.onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; updatePage(); }};
+        
+        // Initial setup
         chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
-        switchMode('paged');
+        switchMode('paged'); // Start in paged mode
         readerModal.classList.remove('hidden');
     };
     
@@ -228,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('hashchange', router);
             siteTitle.addEventListener('click', () => window.location.hash = '#/');
             router();
-        } catch (error) {
+        } catch (error)
+        {
             console.error('Initialization failed:', error);
             app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p>Check console for details.</p></div>`;
         }
