@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Comic Collection</title>
+    
+    <!-- SEO and Metadata -->
+    <meta name="description" content="A personal collection of comics and webtoons, self-hosted with love.">
+    <meta name="author" content="Your Name">
+    <!-- Add a 32x32 favicon.ico file to your project's root folder -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        #app {
+            flex-grow: 1;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111827; }
+        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #718096; }
+        .loader {
+            border: 4px solid #4b5563;
+            border-top: 4px solid #a855f7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .card-aspect { aspect-ratio: 2 / 3; }
+        /* Toggle Switch for Webtoon Mode */
+        .toggle-checkbox:checked { right: 0; border-color: #8b5cf6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #8b5cf6; }
+    </style>
+</head>
+<body class="text-white">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+        <nav class="container mx-auto px-4 max-w-7xl h-16 flex items-center justify-between">
+            <a href="#" onclick="event.preventDefault(); window.location.reload();" class="text-2xl font-bold text-purple-500">MyComics</a>
+            <div class="relative w-full max-w-xs">
+                <input type="text" id="searchInput" placeholder="Search my comics..." aria-label="Search comics" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-4 pl-10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Application Container -->
+    <div id="app" class="container mx-auto p-4 max-w-7xl">
+        <main id="content">
+            <!-- Comics will be loaded here by JavaScript -->
+        </main>
+    </div>
+
+    <!-- Simple Footer -->
+    <footer class="w-full bg-gray-900/80 border-t border-gray-800 mt-8">
+        <div class="container mx-auto py-4 px-4 text-center text-gray-400 text-sm">
+            <p>&copy; 2025 Your Name or Comic Studio. All Rights Reserved.</p>
+            <p class="mt-1">Powered by pure HTML, CSS, and JavaScript.</p>
+        </div>
+    </footer>
+
+    <!-- Reader Modal -->
+    <div id="readerModal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex-col">
+        <div id="reader-controls" class="fixed top-0 left-0 right-0 bg-gray-900/80 backdrop-blur-md p-3 flex justify-between items-center z-10 gap-2">
+            <button id="closeReader" aria-label="Close reader" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close</button>
+            <div class="text-center overflow-hidden whitespace-nowrap text-ellipsis">
+                <h2 id="chapterTitle" class="text-lg font-semibold"></h2>
+                <div id="pageIndicator" class="text-sm text-gray-300"></div>
+            </div>
+             <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+                <div class="hidden sm:flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-300">Webtoon</span>
+                    <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="webtoonToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                        <label for="webtoonToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                    </div>
+                </div>
+                <select id="chapterSelect" aria-label="Select chapter" class="bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+             </div>
+        </div>
+        <div id="readerContainer" class="w-full h-full pt-20 pb-4 overflow-y-auto flex flex-col items-center">
+            <div id="readerContent" class="flex flex-col items-center w-full">
+                <!-- Comic pages will be injected here -->
+            </div>
+            <div id="page-nav-buttons" class="flex justify-center space-x-4 my-4">
+                <button id="prevPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">&larr; Prev</button>
+                <button id="nextPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">Next &rarr;</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript Dependency -->
+    <script src="js/main.js"></script>
+    
+    <!-- NoScript Fallback -->
+    <noscript>
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; color: white; display: flex; justify-content: center; align-items: center; text-align: center; z-index: 1000;">
+            <p>This website requires JavaScript to function.<br>Please enable JavaScript in your browser settings.</p>
+        </div>
+    </noscript>
+</body>
+</html>
+

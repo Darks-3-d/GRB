@@ -1,0 +1,17 @@
+{
+  "id": "another-comic",
+  "title": "Another Awesome Comic",
+  "description": "This is a completely different comic series about space exploration and adventure.",
+  "coverImage": "https://placehold.co/512x768/4c1d95/ffffff?text=Another+Cover",
+  "chapters": [
+    {
+      "chapter": "1",
+      "title": "Blast Off!",
+      "publishDate": "2025-09-15",
+      "pages": [
+        "https://placehold.co/800x1200/111827/ffffff?text=Space+Page+1",
+        "https://placehold.co/800x1200/111827/ffffff?text=Space+Page+2"
+      ]
+    }
+  ]
+}

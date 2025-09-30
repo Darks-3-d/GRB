@@ -1,0 +1,27 @@
+{
+  "id": "my-first-comic",
+  "title": "My First Comic",
+  "description": "This is a sample description for my first amazing comic. It is about a hero who saves the day. You can write a longer description here to give your readers an idea of what the comic is about.",
+  "coverImage": "https://placehold.co/512x768/1e293b/ffffff?text=My+Cover",
+  "chapters": [
+    {
+      "chapter": "1",
+      "title": "The Beginning",
+      "publishDate": "2025-10-01",
+      "pages": [
+        "https://placehold.co/800x1200/111827/ffffff?text=Page+1",
+        "https://placehold.co/800x1200/111827/ffffff?text=Page+2",
+        "https://placehold.co/800x1200/111827/ffffff?text=Page+3"
+      ]
+    },
+    {
+      "chapter": "2",
+      "title": "The Challenge",
+      "publishDate": "2025-10-08",
+      "pages": [
+        "https://placehold.co/800x1200/111827/ffffff?text=Page+1",
+        "https://placehold.co/800x1200/111827/ffffff?text=Page+2"
+      ]
+    }
+  ]
+}
