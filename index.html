@@ -4,37 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Comic Collection</title>
-    
-    <!-- SEO and Metadata -->
-    <meta name="description" content="A personal collection of comics and webtoons, self-hosted with love.">
+    <meta name="description" content="A personal collection of comics and webtoons.">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <style>
-        :root {
-            --purple-glow: 0px 0px 15px rgba(168, 85, 247, 0.5);
-        }
-        html {
-            scroll-behavior: smooth;
-        }
+        html { scroll-behavior: smooth; }
         body {
             font-family: 'Jost', sans-serif;
-            background-color: #030712; 
+            background-color: #111827;
         }
-        /* This class is added via JS to prevent background scrolling when the reader is open */
         body.modal-open {
             overflow: hidden;
         }
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #111827; }
-        ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #a855f7; }
 
         .loader {
@@ -47,81 +34,29 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Header Scroll Effect */
         #main-header {
-            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-        }
-        #main-header.scrolled {
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
             background-color: rgba(17, 24, 39, 0.8);
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-            border-bottom-color: #374151;
-        }
-
-        /* Hero Section Styling */
-        #hero {
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        #hero::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(to top, rgba(3, 7, 18, 1) 0%, rgba(3, 7, 18, 0.8) 50%, rgba(3, 7, 18, 0.2) 100%);
-        }
-
-        /* Details Page Banner Styling */
-        #details-banner {
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        #details-banner::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(3, 7, 18, 0.6);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-        .frosted-glass-pane {
-            background-color: rgba(17, 24, 39, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid #374151;
         }
         .tag {
-            background-color: rgba(139, 92, 246, 0.3);
+            background-color: rgba(139, 92, 246, 0.2);
             color: #c4b5fd;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             font-size: 0.8rem;
             font-weight: 500;
-            border: 1px solid rgba(139, 92, 246, 0.5);
+            border: 1px solid rgba(139, 92, 246, 0.4);
         }
-
-        /* Animations */
-        .comic-card {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        }
-        .comic-card.is-visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Toggle Switch for Reader */
-        .toggle-checkbox:checked { right: 0; border-color: #8b5cf6; }
         .toggle-checkbox:checked + .toggle-label { background-color: #8b5cf6; }
     </style>
 </head>
 <body class="text-gray-200">
 
     <!-- Navigation Bar -->
-    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 border-b border-transparent">
+    <header id="main-header" class="sticky top-0 left-0 right-0 z-50">
         <nav class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <h1 id="site-title" class="text-3xl font-bold text-white cursor-pointer transition-colors hover:text-purple-400">MyComics</h1>
             <div id="back-button-container"></div>
@@ -129,43 +64,40 @@
     </header>
 
     <!-- App Container -->
-    <div id="app">
+    <div id="app" class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <!-- JS will render content here -->
     </div>
 
     <!-- Reader Modal -->
-    <div id="readerModal" class="fixed inset-0 z-[100] hidden flex-col">
-        <!-- Background Overlay -->
-        <div class="absolute inset-0 bg-black bg-opacity-90"></div>
-
+    <div id="readerModal" class="fixed inset-0 z-[100] hidden flex-col bg-gray-900">
         <!-- Reader Controls -->
-        <div id="reader-controls" class="relative z-10 w-full bg-gray-900/80 backdrop-blur-md p-3 flex justify-between items-center border-b border-gray-700 gap-2">
+        <div id="reader-controls" class="w-full bg-gray-800 p-3 flex justify-between items-center border-b border-gray-700 gap-2 flex-shrink-0">
             <button id="closeReader" aria-label="Close reader" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close</button>
             <div class="text-center overflow-hidden whitespace-nowrap text-ellipsis">
                 <h2 id="chapterTitle" class="text-lg font-semibold text-white"></h2>
                 <div id="pageIndicator" class="text-sm text-gray-300"></div>
             </div>
             <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-                <div class="hidden sm:flex items-center space-x-2">
+                <div class="flex items-center space-x-2">
                     <span class="text-sm font-medium text-gray-300">Webtoon</span>
                     <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
                         <input type="checkbox" name="toggle" id="webtoonToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
                         <label for="webtoonToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
                     </div>
                 </div>
-                <select id="chapterSelect" aria-label="Select chapter" class="bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+                <select id="chapterSelect" aria-label="Select chapter" class="bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
             </div>
         </div>
         
         <!-- Reader Content Area -->
-        <div id="readerContainer" class="relative z-0 w-full flex-grow overflow-y-auto flex flex-col items-center py-4">
+        <div id="readerContainer" class="w-full flex-grow overflow-y-auto flex flex-col items-center py-4">
             <div id="readerContent" class="flex flex-col items-center w-full">
                 <!-- Comic pages will be injected here -->
             </div>
         </div>
 
         <!-- Page Navigation -->
-         <div id="page-nav-buttons" class="relative z-10 w-full flex justify-center space-x-4 py-3 bg-gray-900/80 backdrop-blur-md border-t border-gray-700">
+         <div id="page-nav-buttons" class="w-full flex justify-center space-x-4 py-3 bg-gray-800 border-t border-gray-700 flex-shrink-0">
             <button id="prevPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">&larr; Prev</button>
             <button id="nextPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg">Next &rarr;</button>
         </div>
