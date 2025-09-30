@@ -141,7 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Reader Modal Logic (Global Scope) ---
     window.openReader = (comicId, chapterNum) => {
+        // --- THIS IS THE SCROLLING FIX ---
+        document.documentElement.classList.add('modal-open');
         document.body.classList.add('modal-open');
+
         const comic = allComics.find(c => c.id === comicId);
         if (!comic) return;
         
@@ -183,6 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const closeReader = () => {
             readerModal.classList.add('hidden');
+             // --- THIS IS THE SCROLLING FIX ---
+            document.documentElement.classList.remove('modal-open');
             document.body.classList.remove('modal-open');
         };
 
