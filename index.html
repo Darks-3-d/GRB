@@ -26,8 +26,11 @@
         }
         body {
             font-family: 'Jost', sans-serif;
-            background-color: #030712; /* A deeper black for a more premium feel */
-            min-height: 100vh;
+            background-color: #030712; 
+        }
+        /* This class is added via JS to prevent background scrolling when the reader is open */
+        body.modal-open {
+            overflow: hidden;
         }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #111827; }
