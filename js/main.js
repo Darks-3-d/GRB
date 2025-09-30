@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="mt-12">
                              <h3 class="text-2xl font-bold mb-4 text-white border-b-2 border-purple-500/50 pb-2">Chapters</h3>
-                             <ul class="bg-gray-900/70 rounded-lg overflow-hidden border border-gray-800/50 max-h-96 overflow-y-auto">
+                             <ul class="bg-gray-900/70 rounded-lg overflow-hidden border border-gray-800/50">
                                 ${comic.chapters.map(ch => `
                                     <li class="border-b border-gray-800/50 last:border-b-0">
                                         <a href="#" onclick="event.preventDefault(); openReader('${comic.id}', '${ch.chapter}')" class="block p-4 hover:bg-gray-800/80 transition-colors">
