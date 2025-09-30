@@ -138,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         app.innerHTML = `
             <main>
-                <section id="details-banner" class="min-h-screen py-32 flex items-center" style="background-image: url('${comic.coverImage}');">
+                <section id="details-banner" class="min-h-screen py-32" style="background-image: url('${comic.coverImage}');">
                      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
                             <div class="md:col-span-1 lg:col-span-1 flex justify-center">
