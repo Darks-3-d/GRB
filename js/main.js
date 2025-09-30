@@ -1,46 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- DOM Elements ---
+    // --- App State ---
     const app = document.getElementById('app');
     const siteTitle = document.getElementById('site-title');
     const header = document.getElementById('main-header');
-    const headerControls = document.getElementById('header-controls');
-    
-    // Modal Elements
+    const backButtonContainer = document.getElementById('back-button-container');
     const readerModal = document.getElementById('readerModal');
-    const closeReaderBtn = document.getElementById('closeReader');
-    const chapterTitleEl = document.getElementById('chapterTitle');
-    const pageIndicatorEl = document.getElementById('pageIndicator');
-    const chapterSelectEl = document.getElementById('chapterSelect');
-    const webtoonToggle = document.getElementById('webtoonToggle');
-    const readerContent = document.getElementById('readerContent');
-    const readerContainer = document.getElementById('readerContainer');
-    const pageNavButtons = document.getElementById('page-nav-buttons');
-    const prevPageBtn = document.getElementById('prevPage');
-    const nextPageBtn = document.getElementById('nextPage');
-
-    // --- App State ---
-    let comicsLibrary = [];
-    let currentComicDetails = null;
-    let currentPage = 0;
+    let allComics = [];
 
     // --- Utility Functions ---
-    const showLoader = (container) => {
-        container.innerHTML = `<div class="flex justify-center items-center min-h-[60vh]"><div class="loader"></div></div>`;
+    const showLoader = () => {
+        app.innerHTML = `<div class="flex justify-center items-center h-screen"><div class="loader"></div></div>`;
     };
 
-    const createHeaderControls = (type) => {
-        headerControls.innerHTML = '';
-        if (type === 'home') {
-             // Future search bar can go here
-        } else if (type === 'details') {
-            const backButton = document.createElement('button');
-            backButton.innerHTML = `&larr; Back to Library`;
-            backButton.className = 'bg-gray-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-colors';
-            backButton.onclick = renderHomepage;
-            headerControls.appendChild(backButton);
-        }
+    const createBackButton = (text, onClick) => {
+        backButtonContainer.innerHTML = '';
+        const button = document.createElement('button');
+        button.innerHTML = `&larr; ${text}`;
+        button.className = 'bg-gray-800 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm';
+        button.onclick = onClick;
+        backButtonContainer.appendChild(button);
     };
-    
+
+    const clearBackButton = () => { backButtonContainer.innerHTML = ''; };
+
     // --- Animation Logic ---
     const observeElements = () => {
         const observer = new IntersectionObserver((entries) => {
@@ -59,81 +41,127 @@ document.addEventListener('DOMContentLoaded', () => {
         header.classList.toggle('scrolled', window.scrollY > 50);
     });
 
-    // --- Page Rendering ---
+    // --- Rendering Functions ---
+
     const renderHomepage = () => {
-        createHeaderControls('home');
-        if (comicsLibrary.length === 0) {
-            app.innerHTML = `<div class="text-center py-20"><h2 class="text-2xl font-bold">No Comics Found</h2></div>`;
+        clearBackButton();
+        showLoader();
+
+        if (allComics.length === 0) {
+            app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold">No Comics Found</h2></div>`;
             return;
         }
 
-        const featuredComic = comicsLibrary[0];
-        const otherComics = comicsLibrary.slice(1);
+        // Sort comics by the most recent chapter's publish date
+        const sortedComics = [...allComics].sort((a, b) => {
+            const lastChapterA = new Date(a.chapters[a.chapters.length - 1].publishDate);
+            const lastChapterB = new Date(b.chapters[b.chapters.length - 1].publishDate);
+            return lastChapterB - lastChapterA;
+        });
+        
+        const latestUpdates = sortedComics.slice(0, 6); // Get top 6 for "Latest Updates"
+        const featuredComic = latestUpdates.length > 0 ? latestUpdates[0] : allComics[0];
 
         app.innerHTML = `
-            <section id="hero" class="h-screen min-h-[700px] flex items-center justify-center text-center text-white relative" style="background-image: url('${featuredComic.coverImage}');">
-                <div class="relative z-10 p-4 max-w-3xl">
-                    <h2 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-4" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">${featuredComic.title}</h2>
-                    <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto mb-8" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.9);">${featuredComic.description.substring(0, 150)}...</p>
-                    <button class="read-now-btn bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform hover:scale-105" data-comic-id="${featuredComic.id}">Read Now</button>
+            <main>
+                <!-- Hero Section -->
+                <section id="hero" class="h-screen min-h-[700px] flex items-center justify-center text-center text-white" style="background-image: url('${featuredComic.coverImage}');">
+                    <div class="relative z-10 p-4 max-w-3xl">
+                        <h2 class="text-4xl md:text-6xl font-extrabold" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">${featuredComic.title}</h2>
+                        <p class="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto my-6" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.9);">${featuredComic.description.substring(0, 150)}...</p>
+                        <button onclick="window.location.hash='#/comic/${featuredComic.id}'" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform hover:scale-105" style="box-shadow: var(--purple-glow);">Read Now</button>
+                    </div>
+                </section>
+                
+                <!-- Library Section -->
+                <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
+                    <div class="flex justify-between items-center mb-8">
+                         <h2 class="text-3xl font-bold text-white border-l-4 border-purple-500 pl-4">Latest Updates</h2>
+                         <a href="#/library" class="text-purple-400 hover:text-purple-300">View all &rarr;</a>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        ${latestUpdates.map(comic => renderComicCard(comic)).join('')}
+                    </div>
                 </div>
-            </section>
-            
-            ${otherComics.length > 0 ? `
-            <section class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-                <h2 class="text-3xl font-bold text-white mb-8 border-l-4 border-purple-500 pl-4">Full Library</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-                    ${otherComics.map(comic => `
-                        <div class="comic-card cursor-pointer group" data-comic-id="${comic.id}">
-                            <div class="aspect-[2/3] rounded-lg overflow-hidden shadow-lg">
-                                <img src="${comic.coverImage}" alt="${comic.title}" class="w-full h-full object-cover">
-                            </div>
-                            <h3 class="mt-3 font-semibold text-white truncate">${comic.title}</h3>
-                        </div>
-                    `).join('')}
+            </main>
+        `;
+        observeElements();
+    };
+    
+    const renderLibraryPage = () => {
+        createBackButton('Back to Home', () => window.location.hash = '#/');
+        showLoader();
+        app.innerHTML = `
+            <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-32 pb-16">
+                <h2 class="text-4xl font-bold text-white mb-12 border-l-4 border-purple-500 pl-4">Full Library</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    ${allComics.map(comic => renderComicCard(comic)).join('')}
                 </div>
-            </section>` : ''}
+            </div>
         `;
         observeElements();
     };
 
-    const renderDetailsPage = async (comicId) => {
-        showLoader(app);
-        createHeaderControls('details');
-
-        try {
-            const response = await fetch(`comics/${comicId}.json?v=${new Date().getTime()}`);
-            if (!response.ok) throw new Error('Comic details not found');
-            const details = await response.json();
-            currentComicDetails = details; // Store for the reader
-            
-            app.innerHTML = `
-                <section id="details-banner" class="h-[60vh] min-h-[400px] relative flex items-end p-4 sm:p-8 lg:p-12" style="background-image: url('${details.coverImage}');">
-                     <div class="relative z-10 flex flex-col md:flex-row items-start gap-8">
-                        <div class="w-40 sm:w-48 flex-shrink-0 -mb-16">
-                            <img src="${details.coverImage}" alt="Cover" class="aspect-[2/3] w-full object-cover rounded-lg shadow-2xl">
-                        </div>
-                        <div>
-                            <h2 class="text-3xl sm:text-5xl font-extrabold text-white" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.8);">${details.title}</h2>
-                            <button class="start-reading-btn mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-full transition-transform hover:scale-105" data-chapter="${details.chapters[0].chapter}">
-                                Start Reading
-                            </button>
-                        </div>
+    const renderComicCard = (comic) => {
+        const latestChapters = comic.chapters.slice(-3).reverse(); // Get last 3 chapters
+        return `
+            <div class="comic-card cursor-pointer group" onclick="window.location.hash='#/comic/${comic.id}'">
+                <div class="flex gap-4">
+                    <div class="w-1/3 flex-shrink-0">
+                        <img src="${comic.coverImage}" alt="${comic.title}" class="w-full h-auto object-cover rounded-md shadow-lg group-hover:scale-105 transition-transform duration-300">
                     </div>
-                </section>
-                
-                <section class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 pt-24">
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div class="lg:col-span-2">
-                            <h3 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Description</h3>
-                            <p class="text-gray-300 leading-relaxed">${details.description}</p>
+                    <div class="w-2/3">
+                        <h3 class="font-bold text-lg text-white truncate mb-1">${comic.title}</h3>
+                        <p class="text-sm text-gray-400 mb-2 truncate">${(comic.tags || []).join(', ')}</p>
+                        <ul class="text-sm space-y-1 text-gray-300">
+                            ${latestChapters.map(ch => `
+                                <li class="flex justify-between text-xs border-b border-gray-700/50 pb-1">
+                                    <span>Chapter ${ch.chapter}</span>
+                                    <span class="text-gray-500">${new Date(ch.publishDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    };
+
+    const renderDetailsPage = async (comicId) => {
+        showLoader();
+        const comic = allComics.find(c => c.id === comicId);
+        if (!comic) { renderHomepage(); return; }
+        
+        createBackButton('Back to Home', () => window.location.hash = '#/');
+
+        app.innerHTML = `
+            <main>
+                <section id="details-banner" class="min-h-screen py-24 flex items-center" style="background-image: url('${comic.coverImage}');">
+                     <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                            <div class="md:col-span-1 flex justify-center">
+                                <img src="${comic.coverImage}" alt="Cover" class="w-64 rounded-lg shadow-2xl">
+                            </div>
+                            <div class="md:col-span-2 relative z-10">
+                                <div class="frosted-glass-pane p-8 rounded-lg">
+                                    <h2 class="text-4xl lg:text-5xl font-extrabold text-white mb-4">${comic.title}</h2>
+                                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                                        <span class="tag ${comic.status === 'Ongoing' ? 'bg-green-500/50' : 'bg-blue-500/50'}">${comic.status || 'N/A'}</span>
+                                        ${(comic.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                    </div>
+                                    <p class="text-gray-300 leading-relaxed mb-6">${comic.description}</p>
+                                    <button onclick="openReader('${comic.id}', '${comic.chapters[0].chapter}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg transition-transform hover:scale-105" style="box-shadow: var(--purple-glow);">
+                                        Start Reading
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-2xl font-bold mb-4 border-b border-gray-700 pb-2">Chapters</h3>
-                            <ul class="bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
-                                ${details.chapters.map(ch => `
-                                    <li class="border-b border-gray-800 last:border-b-0">
-                                        <a href="#" class="chapter-link block p-4 hover:bg-gray-800 transition-colors" data-chapter="${ch.chapter}">
+                        <div class="mt-12">
+                             <h3 class="text-2xl font-bold mb-4 text-white border-b-2 border-purple-500/50 pb-2">Chapters</h3>
+                             <ul class="bg-gray-900/70 rounded-lg overflow-hidden border border-gray-800/50 max-h-96 overflow-y-auto">
+                                ${comic.chapters.map(ch => `
+                                    <li class="border-b border-gray-800/50 last:border-b-0">
+                                        <a href="#" onclick="event.preventDefault(); openReader('${comic.id}', '${ch.chapter}')" class="block p-4 hover:bg-gray-800/80 transition-colors">
                                             <span class="font-semibold">Chapter ${ch.chapter}</span>
                                             <span class="text-gray-400 text-sm block">${ch.title}</span>
                                         </a>
@@ -141,120 +169,94 @@ document.addEventListener('DOMContentLoaded', () => {
                                 `).join('')}
                             </ul>
                         </div>
-                    </div>
+                     </div>
                 </section>
-            `;
-        } catch (error) {
-            console.error('Failed to load comic details:', error);
-            app.innerHTML = `<div class="text-center py-20"><h2 class="text-2xl font-bold">Error loading comic.</h2></div>`;
-        }
+            </main>
+        `;
     };
 
-    // --- Reader Modal Logic ---
-    const openReader = (chapterNum) => {
-        const chapter = currentComicDetails.chapters.find(c => c.chapter == chapterNum);
-        if (!chapter) return;
+    // --- Reader Modal Logic (Global Scope) ---
+    window.openReader = (comicId, chapterNum) => {
+        const comic = allComics.find(c => c.id === comicId);
+        if (!comic) return;
+        
+        const chapter = comic.chapters.find(ch => ch.chapter == chapterNum);
+        if(!chapter) return;
 
-        currentPage = 0;
+        let currentPage = 0;
+        let readerMode = 'paged'; // Default to paged
+        
+        const chapterTitleEl = document.getElementById('chapterTitle');
+        const pageIndicatorEl = document.getElementById('pageIndicator');
+        const readerContentEl = document.getElementById('readerContent');
+        const chapterSelectEl = document.getElementById('chapterSelect');
+        const webtoonToggle = document.getElementById('webtoonToggle');
+        
+        // Populate chapter select dropdown
+        chapterSelectEl.innerHTML = comic.chapters.map(ch => `<option value="${ch.chapter}" ${ch.chapter == chapterNum ? 'selected' : ''}>Chapter ${ch.chapter}</option>`).join('');
+        chapterSelectEl.onchange = (e) => openReader(comicId, e.target.value);
+
+        const displayPage = () => {
+            if (readerMode === 'paged') {
+                pageIndicatorEl.textContent = `Page ${currentPage + 1} of ${chapter.pages.length}`;
+                pageIndicatorEl.style.display = 'block';
+                document.getElementById('page-nav-buttons').style.display = 'flex';
+                readerContentEl.innerHTML = `<img src="${chapter.pages[currentPage]}" alt="Page ${currentPage + 1}" class="max-w-full max-h-[85vh] object-contain">`;
+            }
+        };
+
+        const displayWebtoon = () => {
+            pageIndicatorEl.style.display = 'none';
+            document.getElementById('page-nav-buttons').style.display = 'none';
+            readerContentEl.innerHTML = `<div class="flex flex-col items-center space-y-0">${chapter.pages.map(p => `<img src="${p}" alt="Page" class="w-full max-w-3xl">`).join('')}</div>`;
+        };
+        
+        const switchMode = (mode) => {
+            readerMode = mode;
+            webtoonToggle.checked = (mode === 'webtoon');
+            if(mode === 'paged') displayPage(); else displayWebtoon();
+        };
+
+        webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
+        document.getElementById('closeReader').onclick = () => readerModal.classList.add('hidden');
+        document.getElementById('prevPage').onclick = () => { if (currentPage > 0) { currentPage--; displayPage(); }};
+        document.getElementById('nextPage').onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; displayPage(); }};
+
+        chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
+        switchMode('paged'); // Start in paged mode
         readerModal.classList.remove('hidden');
-        readerModal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-
-        // Populate controls
-        chapterTitleEl.textContent = `${currentComicDetails.title} - Ch. ${chapter.chapter}`;
-        chapterSelectEl.innerHTML = currentComicDetails.chapters.map(c => `<option value="${c.chapter}" ${c.chapter == chapterNum ? 'selected' : ''}>Chapter ${c.chapter}</option>`).join('');
-        
-        loadChapter(chapter);
     };
-
-    const closeReader = () => {
-        readerModal.classList.add('hidden');
-        readerModal.classList.remove('flex');
-        document.body.style.overflow = '';
-    };
-
-    const loadChapter = (chapter) => {
-        currentPage = 0;
-        readerContainer.scrollTop = 0; // Reset scroll for new chapter
-        updateReaderView(chapter);
-    };
-
-    const updateReaderView = (chapter) => {
-        const isWebtoon = webtoonToggle.checked;
-        pageNavButtons.style.display = isWebtoon ? 'none' : 'flex';
-
-        if (isWebtoon) {
-            readerContent.innerHTML = chapter.pages.map(src => `<img src="${src}" class="max-w-full mx-auto d-block">`).join('');
-            pageIndicatorEl.textContent = 'Webtoon Mode';
+    
+    // --- Router and Initialization ---
+    const router = () => {
+        const path = window.location.hash.substring(2);
+        if (path === 'library') {
+            renderLibraryPage();
+        } else if (path.startsWith('comic/')) {
+            renderDetailsPage(path.split('/')[1]);
         } else {
-            readerContent.innerHTML = `<img src="${chapter.pages[currentPage]}" class="max-w-full max-h-[85vh] object-contain">`;
-            pageIndicatorEl.textContent = `Page ${currentPage + 1} of ${chapter.pages.length}`;
+            renderHomepage();
         }
-        
-        prevPageBtn.disabled = !isWebtoon && currentPage === 0;
-        nextPageBtn.disabled = !isWebtoon && currentPage === chapter.pages.length - 1;
     };
 
-    // --- Event Listeners ---
-    app.addEventListener('click', (e) => {
-        const comicCard = e.target.closest('.comic-card, .read-now-btn');
-        const chapterLink = e.target.closest('.chapter-link, .start-reading-btn');
-
-        if (comicCard) {
-            const comicId = comicCard.dataset.comicId;
-            renderDetailsPage(comicId);
-        } else if (chapterLink) {
-            e.preventDefault();
-            const chapterNum = chapterLink.dataset.chapter;
-            openReader(chapterNum);
-        }
-    });
-
-    closeReaderBtn.addEventListener('click', closeReader);
-    webtoonToggle.addEventListener('change', () => {
-        const chapter = currentComicDetails.chapters.find(c => c.chapter == chapterSelectEl.value);
-        updateReaderView(chapter);
-    });
-    chapterSelectEl.addEventListener('change', (e) => {
-        const chapter = currentComicDetails.chapters.find(c => c.chapter == e.target.value);
-        loadChapter(chapter);
-    });
-    prevPageBtn.addEventListener('click', () => {
-        if (currentPage > 0) {
-            currentPage--;
-            const chapter = currentComicDetails.chapters.find(c => c.chapter == chapterSelectEl.value);
-            updateReaderView(chapter);
-        }
-    });
-    nextPageBtn.addEventListener('click', () => {
-        const chapter = currentComicDetails.chapters.find(c => c.chapter == chapterSelectEl.value);
-        if (currentPage < chapter.pages.length - 1) {
-            currentPage++;
-            updateReaderView(chapter);
-        }
-    });
-
-    // --- Initialization ---
     const init = async () => {
-        showLoader(app);
         try {
-            const response = await fetch(`comics.json?v=${new Date().getTime()}`);
-            if (!response.ok) throw new Error('Could not fetch comics list.');
-            const comicList = await response.json();
+            const res = await fetch(`comics.json?v=${new Date().getTime()}`);
+            if (!res.ok) throw new Error('Could not fetch comics.json');
+            const comicList = await res.json();
             
-            const detailsPromises = comicList.map(async (item) => {
-                 const id = item.path.split('/')[1].replace('.json', '');
-                 const res = await fetch(`comics/${id}.json?v=${new Date().getTime()}`);
-                 return res.json();
-            });
-            comicsLibrary = await Promise.all(detailsPromises);
+            const comicDetailsPromises = comicList.map(item => 
+                fetch(`${item.path}?v=${new Date().getTime()}`).then(res => res.json())
+            );
+            
+            allComics = await Promise.all(comicDetailsPromises);
 
-            siteTitle.addEventListener('click', renderHomepage);
-            renderHomepage();
-
+            window.addEventListener('hashchange', router);
+            siteTitle.addEventListener('click', () => window.location.hash = '#/');
+            router();
         } catch (error) {
             console.error('Initialization failed:', error);
-            app.innerHTML = `<div class="text-center py-20"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p class="text-gray-400">Please ensure 'comics.json' is present and correctly formatted.</p></div>`;
+            app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p>Check console for details.</p></div>`;
         }
     };
 
