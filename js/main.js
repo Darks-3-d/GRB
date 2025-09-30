@@ -38,7 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Header Scroll Effect ---
     window.addEventListener('scroll', () => {
-        header.classList.toggle('scrolled', window.scrollY > 50);
+        if (!document.body.classList.contains('modal-open')) {
+             header.classList.toggle('scrolled', window.scrollY > 50);
+        }
     });
 
     // --- Rendering Functions ---
@@ -54,12 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Sort comics by the most recent chapter's publish date
         const sortedComics = [...allComics].sort((a, b) => {
-            const lastChapterA = new Date(a.chapters[a.chapters.length - 1].publishDate);
-            const lastChapterB = new Date(b.chapters[b.chapters.length - 1].publishDate);
+            const lastChapterA = a.chapters.length > 0 ? new Date(a.chapters[a.chapters.length - 1].publishDate) : new Date(0);
+            const lastChapterB = b.chapters.length > 0 ? new Date(b.chapters[b.chapters.length - 1].publishDate) : new Date(0);
             return lastChapterB - lastChapterA;
         });
         
-        const latestUpdates = sortedComics.slice(0, 6); // Get top 6 for "Latest Updates"
+        const latestUpdates = sortedComics.slice(0, 6);
         const featuredComic = latestUpdates.length > 0 ? latestUpdates[0] : allComics[0];
 
         app.innerHTML = `
@@ -103,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderComicCard = (comic) => {
-        const latestChapters = comic.chapters.slice(-3).reverse(); // Get last 3 chapters
+        const latestChapters = comic.chapters.slice(-3).reverse();
         return `
             <div class="comic-card cursor-pointer group" onclick="window.location.hash='#/comic/${comic.id}'">
                 <div class="flex gap-4">
@@ -136,17 +138,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         app.innerHTML = `
             <main>
-                <section id="details-banner" class="min-h-screen py-24 flex items-center" style="background-image: url('${comic.coverImage}');">
+                <section id="details-banner" class="min-h-screen py-32 flex items-center" style="background-image: url('${comic.coverImage}');">
                      <div class="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                            <div class="md:col-span-1 flex justify-center">
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 items-center">
+                            <div class="md:col-span-1 lg:col-span-1 flex justify-center">
                                 <img src="${comic.coverImage}" alt="Cover" class="w-64 rounded-lg shadow-2xl">
                             </div>
-                            <div class="md:col-span-2 relative z-10">
+                            <div class="md:col-span-2 lg:col-span-3 relative z-10">
                                 <div class="frosted-glass-pane p-8 rounded-lg">
                                     <h2 class="text-4xl lg:text-5xl font-extrabold text-white mb-4">${comic.title}</h2>
                                     <div class="flex flex-wrap items-center gap-2 mb-4">
-                                        <span class="tag ${comic.status === 'Ongoing' ? 'bg-green-500/50' : 'bg-blue-500/50'}">${comic.status || 'N/A'}</span>
+                                        <span class="tag ${comic.status === 'Ongoing' ? 'bg-green-500/50 text-green-200' : 'bg-blue-500/50 text-blue-200'}">${comic.status || 'N/A'}</span>
                                         ${(comic.tags || []).map(tag => `<span class="tag">${tag}</span>`).join('')}
                                     </div>
                                     <p class="text-gray-300 leading-relaxed mb-6">${comic.description}</p>
@@ -156,13 +158,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-12">
-                             <h3 class="text-2xl font-bold mb-4 text-white border-b-2 border-purple-500/50 pb-2">Chapters</h3>
-                             <ul class="bg-gray-900/70 rounded-lg overflow-hidden border border-gray-800/50">
+                        <div class="mt-16">
+                             <h3 class="text-3xl font-bold mb-6 text-white border-b-2 border-purple-500/50 pb-3">Chapters</h3>
+                             <ul class="bg-gray-900/70 rounded-lg overflow-hidden border border-gray-800/50 backdrop-blur-sm">
                                 ${comic.chapters.map(ch => `
                                     <li class="border-b border-gray-800/50 last:border-b-0">
-                                        <a href="#" onclick="event.preventDefault(); openReader('${comic.id}', '${ch.chapter}')" class="block p-4 hover:bg-gray-800/80 transition-colors">
-                                            <span class="font-semibold">Chapter ${ch.chapter}</span>
+                                        <a href="#" onclick="event.preventDefault(); openReader('${comic.id}', '${ch.chapter}')" class="block p-4 hover:bg-purple-500/20 transition-colors">
+                                            <span class="font-semibold text-lg">Chapter ${ch.chapter}</span>
                                             <span class="text-gray-400 text-sm block">${ch.title}</span>
                                         </a>
                                     </li>
@@ -177,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Reader Modal Logic (Global Scope) ---
     window.openReader = (comicId, chapterNum) => {
+        document.body.classList.add('modal-open'); // Prevent background scroll
         const comic = allComics.find(c => c.id === comicId);
         if (!comic) return;
         
@@ -184,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!chapter) return;
 
         let currentPage = 0;
-        let readerMode = 'paged'; // Default to paged
+        let readerMode = 'paged';
         
         const chapterTitleEl = document.getElementById('chapterTitle');
         const pageIndicatorEl = document.getElementById('pageIndicator');
@@ -192,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const chapterSelectEl = document.getElementById('chapterSelect');
         const webtoonToggle = document.getElementById('webtoonToggle');
         
-        // Populate chapter select dropdown
         chapterSelectEl.innerHTML = comic.chapters.map(ch => `<option value="${ch.chapter}" ${ch.chapter == chapterNum ? 'selected' : ''}>Chapter ${ch.chapter}</option>`).join('');
         chapterSelectEl.onchange = (e) => openReader(comicId, e.target.value);
 
@@ -217,13 +219,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if(mode === 'paged') displayPage(); else displayWebtoon();
         };
 
+        const closeReader = () => {
+            readerModal.classList.add('hidden');
+            document.body.classList.remove('modal-open'); // Re-enable background scroll
+        };
+
         webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
-        document.getElementById('closeReader').onclick = () => readerModal.classList.add('hidden');
+        document.getElementById('closeReader').onclick = closeReader;
         document.getElementById('prevPage').onclick = () => { if (currentPage > 0) { currentPage--; displayPage(); }};
         document.getElementById('nextPage').onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; displayPage(); }};
 
         chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
-        switchMode('paged'); // Start in paged mode
+        switchMode('paged');
         readerModal.classList.remove('hidden');
     };
     
