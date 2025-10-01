@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const siteTitle = document.getElementById('site-title');
     const header = document.getElementById('main-header');
     const backButtonContainer = document.getElementById('back-button-container');
-    const readerModal = document.getElementById('readerModal');
     const loginScreen = document.getElementById('login-screen');
     const mainContent = document.getElementById('main-content');
     const loginForm = document.getElementById('login-form');
@@ -18,10 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let isInitialized = false;
 
     // --- Authentication Logic ---
-    const handleLogin = () => {
-        loginScreen.classList.add('hidden');
-        mainContent.classList.remove('hidden');
-        mainContent.classList.add('flex');
+    const handleLoginSuccess = () => {
+        loginScreen.style.display = 'none';
+        mainContent.style.display = 'flex';
         if (!isInitialized) {
             init();
         }
@@ -29,11 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const checkAuth = () => {
         if (sessionStorage.getItem('isAuthenticated') === 'true') {
-            handleLogin();
+            handleLoginSuccess();
         } else {
-            loginScreen.classList.remove('hidden');
-            mainContent.classList.add('hidden');
-            mainContent.classList.remove('flex');
+            loginScreen.style.display = 'flex';
+            mainContent.style.display = 'none';
         }
     };
 
@@ -41,10 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (passwordInput.value === CORRECT_PASSWORD) {
             sessionStorage.setItem('isAuthenticated', 'true');
-            handleLogin();
+            handleLoginSuccess();
         } else {
             errorMessage.textContent = 'Incorrect password. Please try again.';
             passwordInput.value = '';
+            passwordInput.focus();
         }
     });
 
@@ -66,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Rendering Functions ---
     const renderHomepage = () => {
+        header.style.display = 'block';
         clearBackButton();
         showLoader();
         if (allComics.length === 0) {
@@ -94,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderLibraryPage = () => {
+        header.style.display = 'block';
         createBackButton('Back to Home', () => window.location.hash = '#/');
         showLoader();
         app.innerHTML = `
@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderDetailsPage = (comicId) => {
+        header.style.display = 'block';
         showLoader();
         const comic = allComics.find(c => c.id === comicId);
         if (!comic) { renderHomepage(); return; }
@@ -143,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12">
                     <div class="md:col-span-1 lg:col-span-1">
                         <img src="${comic.coverImage}" alt="Cover" class="w-full rounded-lg shadow-2xl mb-4">
-                         <button onclick="openReader('${comic.id}', '${comic.chapters[0].chapter}')" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105">
+                         <button onclick="window.location.hash='/comic/${comic.id}/chapter/${comic.chapters[0].chapter}'" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105">
                             Start Reading
                         </button>
                     </div>
@@ -159,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <ul class="bg-gray-800/50 rounded-lg border border-gray-700 max-h-[60vh] overflow-y-auto">
                            ${comic.chapters.map(ch => `
                                 <li class="border-b border-gray-700/50 last:border-b-0">
-                                    <a href="#" onclick="event.preventDefault(); openReader('${comic.id}', '${ch.chapter}')" class="block p-4 hover:bg-purple-500/20 transition-colors">
+                                    <a href="#/comic/${comic.id}/chapter/${ch.chapter}" class="block p-4 hover:bg-purple-500/20 transition-colors">
                                         <span class="font-semibold text-lg">Chapter ${ch.chapter}</span>
                                         <span class="text-gray-400 text-sm block">${ch.title}</span>
                                     </a>
@@ -171,102 +172,72 @@ document.addEventListener('DOMContentLoaded', () => {
             </main>
         `;
     };
-
-    // --- IMMERSIVE READER LOGIC ---
-    let uiTimeout;
-    window.openReader = (comicId, chapterNum) => {
-        document.body.classList.add('modal-open');
+    
+    const renderReaderPage = (comicId, chapterNum) => {
+        showLoader();
         const comic = allComics.find(c => c.id === comicId);
         const chapter = comic.chapters.find(ch => String(ch.chapter) === String(chapterNum));
-        if (!comic || !chapter) return;
+        if (!comic || !chapter) {
+            window.location.hash = '#/';
+            return;
+        }
 
-        let currentPage = 0;
-        let readerMode = 'paged';
+        // Hide main header and back button for reader
+        header.style.display = 'none';
+        clearBackButton();
+
+        const currentIndex = comic.chapters.findIndex(ch => String(ch.chapter) === String(chapterNum));
+        const prevChapter = currentIndex > 0 ? comic.chapters[currentIndex - 1] : null;
+        const nextChapter = currentIndex < comic.chapters.length - 1 ? comic.chapters[currentIndex + 1] : null;
+
+        app.innerHTML = `
+            <div id="reader-view" class="bg-black">
+                <!-- Reader Top Nav -->
+                <div class="sticky top-0 z-20 bg-gray-900 border-b border-gray-700">
+                    <div class="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
+                        <a href="#/comic/${comicId}" class="bg-gray-700 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm">&larr; Back to Chapters</a>
+                        <h2 class="text-lg font-semibold truncate hidden sm:block">${comic.title}</h2>
+                        <select id="chapterSelectReader" class="bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                             ${comic.chapters.map(ch => `<option value="${ch.chapter}" ${String(ch.chapter) === String(chapterNum) ? 'selected' : ''}>Chapter ${ch.chapter}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Reader Content -->
+                <div class="container mx-auto max-w-3xl py-8">
+                    <div class="flex flex-col items-center space-y-0">
+                        ${chapter.pages.map(p => `<img src="${p}" alt="Page" class="w-full">`).join('')}
+                    </div>
+                </div>
+
+                <!-- Reader Bottom Nav -->
+                <div class="sticky bottom-0 z-20 bg-gray-900 border-t border-gray-700">
+                    <div class="container mx-auto px-4 h-20 flex items-center justify-center gap-4">
+                         ${prevChapter ? `<a href="#/comic/${comicId}/chapter/${prevChapter.chapter}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">&larr; Previous</a>` : `<div class="w-36"></div>`}
+                         <div class="text-center font-semibold">Chapter ${chapterNum}</div>
+                         ${nextChapter ? `<a href="#/comic/${comicId}/chapter/${nextChapter.chapter}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">Next &rarr;</a>` : `<div class="w-36"></div>`}
+                    </div>
+                </div>
+            </div>
+        `;
         
-        const readerSidebar = document.getElementById('readerSidebar');
-        const chapterTitleEl = document.getElementById('chapterTitle');
-        const pageIndicatorEl = document.getElementById('pageIndicator');
-        const readerContainer = document.getElementById('readerContainer');
-        const readerContentEl = document.getElementById('readerContent');
-        const chapterSelectEl = document.getElementById('chapterSelect');
-        const webtoonToggle = document.getElementById('webtoonToggle');
-        const pageNavButtons = document.getElementById('page-nav-buttons');
-        const prevPageBtn = document.getElementById('prevPage');
-        const nextPageBtn = document.getElementById('nextPage');
-
-        chapterSelectEl.innerHTML = comic.chapters.map(ch => 
-            `<option value="${ch.chapter}" ${String(ch.chapter) === String(chapterNum) ? 'selected' : ''}>Chapter ${ch.chapter}</option>`
-        ).join('');
-        chapterSelectEl.onchange = (e) => openReader(comicId, e.target.value);
-
-        const hideControls = () => readerSidebar.classList.add('hidden-sidebar');
-        const showControls = () => {
-            readerSidebar.classList.remove('hidden-sidebar');
-            clearTimeout(uiTimeout);
-            uiTimeout = setTimeout(hideControls, 3000);
+        // Add event listener for the new chapter select dropdown
+        document.getElementById('chapterSelectReader').onchange = (e) => {
+            window.location.hash = `#/comic/${comicId}/chapter/${e.target.value}`;
         };
-        const toggleControls = (e) => {
-            // Only toggle if clicking the container, not the sidebar itself
-            if (e.target === readerContainer) {
-                readerSidebar.classList.toggle('hidden-sidebar');
-                if(!readerSidebar.classList.contains('hidden-sidebar')) {
-                    showControls(); // If we un-hid it, start the timer
-                } else {
-                    clearTimeout(uiTimeout); // If we hid it manually, stop the timer
-                }
-            }
-        };
-
-        const updatePage = () => {
-            if (readerMode === 'paged') {
-                readerContentEl.innerHTML = `<img src="${chapter.pages[currentPage]}" alt="Page ${currentPage + 1}" class="max-w-full h-auto object-contain mx-auto">`;
-                pageIndicatorEl.textContent = `Page ${currentPage + 1} of ${chapter.pages.length}`;
-                prevPageBtn.disabled = currentPage === 0;
-                nextPageBtn.disabled = currentPage === chapter.pages.length - 1;
-            }
-        };
-
-        const switchMode = (mode) => {
-            readerMode = mode;
-            webtoonToggle.checked = (mode === 'webtoon');
-            readerContainer.scrollTop = 0;
-            if (mode === 'webtoon') {
-                pageNavButtons.style.display = 'none';
-                pageIndicatorEl.style.display = 'none';
-                readerContentEl.innerHTML = `<div class="flex flex-col items-center space-y-0">${chapter.pages.map(p => `<img src="${p}" alt="Page" class="w-full max-w-3xl">`).join('')}</div>`;
-            } else {
-                pageNavButtons.style.display = 'flex';
-                pageIndicatorEl.style.display = 'block';
-                updatePage();
-            }
-            showControls();
-        };
-
-        const closeReader = () => {
-            readerModal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-            clearTimeout(uiTimeout);
-        };
-
-        readerContainer.onclick = toggleControls;
-        webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
-        document.getElementById('closeReader').onclick = closeReader;
-        prevPageBtn.onclick = () => { if (currentPage > 0) { currentPage--; updatePage(); showControls(); }};
-        nextPageBtn.onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; updatePage(); showControls(); }};
-        
-        chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
-        switchMode('paged');
-        readerModal.classList.remove('hidden');
-        showControls();
     };
     
     // --- Router and Initialization ---
     const router = () => {
-        const path = window.location.hash.substring(2);
-        if (path === 'library') {
+        const path = window.location.hash.substring(2); // remove #/
+        const parts = path.split('/');
+
+        if (parts[0] === 'comic' && parts[1] && parts[2] === 'chapter' && parts[3]) {
+            renderReaderPage(parts[1], parts[3]);
+        } else if (parts[0] === 'comic' && parts[1]) {
+            renderDetailsPage(parts[1]);
+        } else if (parts[0] === 'library') {
             renderLibraryPage();
-        } else if (path.startsWith('comic/')) {
-            renderDetailsPage(path.split('/')[1]);
         } else {
             renderHomepage();
         }
