@@ -7,7 +7,6 @@
     
     <!-- SEO and Metadata -->
     <meta name="description" content="A private, self-hosted collection of comics and webtoons.">
-    <!-- This tag tells search engines NOT to index this page -->
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 
@@ -21,24 +20,20 @@
     
     <style>
         /* Base styles */
-        html, body {
-            height: 100%;
-        }
+        html, body { height: 100%; }
         body {
             font-family: 'Jost', sans-serif;
             background-color: #111827;
             color: #d1d5db;
         }
-        /* Style for when the reader modal is open to prevent background scrolling */
-        body.modal-open {
-            overflow: hidden;
-        }
+        body.modal-open { overflow: hidden; }
+        
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        /* Loader animation */
+        
+        /* Loader */
         .loader {
             border: 4px solid #4b5563;
             border-top: 4px solid #a855f7;
@@ -48,7 +43,8 @@
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Style for tags on the details page */
+        
+        /* Tags */
         .tag {
             display: inline-block;
             background-color: #374151;
@@ -59,11 +55,20 @@
             font-weight: 500;
             border: 1px solid #4b5563;
         }
+
+        /* NEW IMMERSIVE READER STYLES */
+        #readerSidebar {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(0);
+        }
+        #readerSidebar.hidden-sidebar {
+            transform: translateX(-100%);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Main Content Area (Initially hidden by login screen) -->
+    <!-- Main Content Area -->
     <div id="main-content" class="hidden flex-grow flex flex-col">
         <!-- Navigation Bar -->
         <header id="main-header" class="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
@@ -73,10 +78,8 @@
             </nav>
         </header>
 
-        <!-- Main Application Container -->
-        <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow">
-            <!-- Content is injected here by JavaScript -->
-        </div>
+        <!-- App Container -->
+        <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow"></div>
 
         <!-- Footer -->
         <footer class="w-full bg-gray-900/80 border-t border-gray-800 mt-12">
@@ -86,15 +89,14 @@
         </footer>
     </div>
 
-    <!-- REBUILT READER MODAL (SIDEBAR LAYOUT) -->
-    <div id="readerModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-row">
+    <!-- IMMERSIVE READER MODAL -->
+    <div id="readerModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-row">
         <!-- Reader Sidebar -->
-        <div class="w-72 bg-gray-900/80 backdrop-blur-md flex flex-col flex-shrink-0 border-r border-gray-700 p-4 space-y-6">
+        <div id="readerSidebar" class="absolute top-0 left-0 bottom-0 w-72 bg-gray-900/80 backdrop-blur-md flex flex-col flex-shrink-0 border-r border-gray-700 p-4 space-y-6 z-10">
             <div class="text-center">
                 <h2 id="chapterTitle" class="text-xl font-semibold truncate"></h2>
                 <div id="pageIndicator" class="text-sm text-gray-400 mt-1"></div>
             </div>
-
             <div class="space-y-4">
                  <div>
                     <label for="chapterSelect" class="block text-sm font-medium text-gray-400 mb-1">Chapter</label>
@@ -104,24 +106,20 @@
                     <span class="text-sm font-medium text-gray-300">Webtoon Mode</span>
                     <label for="webtoonToggle" class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="webtoonToggle" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                 </div>
             </div>
-            
-            <!-- Page Navigation -->
             <div id="page-nav-buttons" class="mt-auto space-y-2">
-                <button id="nextPage" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Next &rarr;</button>
-                <button id="prevPage" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">&larr; Prev</button>
+                <button id="nextPage" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">Next &rarr;</button>
+                <button id="prevPage" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">&larr; Prev</button>
             </div>
-             <button id="closeReader" aria-label="Close reader" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close Reader</button>
+            <button id="closeReader" aria-label="Close reader" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close Reader</button>
         </div>
 
-        <!-- Reader Content (Isolated Scrolling) -->
+        <!-- Reader Content -->
         <div id="readerContainer" class="flex-grow w-full h-full overflow-y-auto">
-            <div id="readerContent">
-                <!-- Comic pages will be injected here -->
-            </div>
+            <div id="readerContent"></div>
         </div>
     </div>
     
@@ -138,15 +136,7 @@
         </div>
     </div>
     
-    <!-- JavaScript Dependency -->
     <script src="js/main.js"></script>
-    
-    <!-- NoScript Fallback -->
-    <noscript>
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; color: white; display: flex; justify-content: center; align-items: center; text-align: center; z-index: 1000;">
-            <p>This website requires JavaScript to function.<br>Please enable JavaScript in your browser settings.</p>
-        </div>
-    </noscript>
 </body>
 </html>
 
