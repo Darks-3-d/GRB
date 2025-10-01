@@ -26,7 +26,6 @@
             background-color: #111827;
             color: #d1d5db;
         }
-        body.modal-open { overflow: hidden; }
         
         /* Custom scrollbar */
         ::-webkit-scrollbar { width: 8px; }
@@ -55,15 +54,6 @@
             font-weight: 500;
             border: 1px solid #4b5563;
         }
-
-        /* NEW IMMERSIVE READER STYLES */
-        #readerSidebar {
-            transition: transform 0.3s ease-in-out;
-            transform: translateX(0);
-        }
-        #readerSidebar.hidden-sidebar {
-            transform: translateX(-100%);
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -71,14 +61,14 @@
     <!-- Main Content Area -->
     <div id="main-content" class="hidden flex-grow flex flex-col">
         <!-- Navigation Bar -->
-        <header id="main-header" class="sticky top-0 z-40 bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
+        <header id="main-header" class="bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
             <nav class="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
                 <a href="#" id="site-title" class="text-3xl font-bold text-purple-500">MyComics</a>
                 <div id="back-button-container"></div>
             </nav>
         </header>
 
-        <!-- App Container -->
+        <!-- App Container (Homepage, Library, Details) -->
         <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow"></div>
 
         <!-- Footer -->
@@ -87,40 +77,6 @@
                 <p>&copy; 2025 Your Comic Collection. All Rights Reserved.</p>
             </div>
         </footer>
-    </div>
-
-    <!-- IMMERSIVE READER MODAL -->
-    <div id="readerModal" class="fixed inset-0 bg-black/95 z-50 hidden flex-row">
-        <!-- Reader Sidebar -->
-        <div id="readerSidebar" class="absolute top-0 left-0 bottom-0 w-72 bg-gray-900/80 backdrop-blur-md flex flex-col flex-shrink-0 border-r border-gray-700 p-4 space-y-6 z-10">
-            <div class="text-center">
-                <h2 id="chapterTitle" class="text-xl font-semibold truncate"></h2>
-                <div id="pageIndicator" class="text-sm text-gray-400 mt-1"></div>
-            </div>
-            <div class="space-y-4">
-                 <div>
-                    <label for="chapterSelect" class="block text-sm font-medium text-gray-400 mb-1">Chapter</label>
-                    <select id="chapterSelect" aria-label="Select chapter" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
-                 </div>
-                 <div class="flex justify-between items-center bg-gray-800/50 p-2 rounded-lg">
-                    <span class="text-sm font-medium text-gray-300">Webtoon Mode</span>
-                    <label for="webtoonToggle" class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="webtoonToggle" class="sr-only peer">
-                        <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                    </label>
-                </div>
-            </div>
-            <div id="page-nav-buttons" class="mt-auto space-y-2">
-                <button id="nextPage" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">Next &rarr;</button>
-                <button id="prevPage" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">&larr; Prev</button>
-            </div>
-            <button id="closeReader" aria-label="Close reader" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close Reader</button>
-        </div>
-
-        <!-- Reader Content -->
-        <div id="readerContainer" class="flex-grow w-full h-full overflow-y-auto">
-            <div id="readerContent"></div>
-        </div>
     </div>
     
     <!-- LOGIN SCREEN -->
