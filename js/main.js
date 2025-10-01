@@ -15,14 +15,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password-input');
     const errorMessage = document.getElementById('error-message');
     let allComics = [];
+    let isInitialized = false; // Flag to prevent multiple initializations
 
     // --- Authentication Logic ---
+    const handleLogin = () => {
+        loginScreen.classList.add('hidden');
+        mainContent.classList.remove('hidden');
+        mainContent.classList.add('flex');
+        if (!isInitialized) {
+            init(); // Initialize the app content only once
+        }
+    };
+
     const checkAuth = () => {
         if (sessionStorage.getItem('isAuthenticated') === 'true') {
-            loginScreen.classList.add('hidden');
-            mainContent.classList.remove('hidden');
-            mainContent.classList.add('flex');
-            init(); // Initialize the app content
+            handleLogin();
         } else {
             loginScreen.classList.remove('hidden');
             mainContent.classList.add('hidden');
@@ -34,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (passwordInput.value === CORRECT_PASSWORD) {
             sessionStorage.setItem('isAuthenticated', 'true');
-            checkAuth();
+            handleLogin();
         } else {
             errorMessage.textContent = 'Incorrect password. Please try again.';
             passwordInput.value = '';
@@ -252,9 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let isInitialized = false;
     const init = async () => {
-        if (isInitialized) return; // Prevent re-initializing
         isInitialized = true;
         try {
             const res = await fetch(`comics.json?v=${new Date().getTime()}`);
@@ -279,3 +284,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Start the App ---
     checkAuth();
 });
+
