@@ -54,12 +54,20 @@
             font-weight: 500;
             border: 1px solid #4b5563;
         }
+        /* Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #8b5cf6;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #8b5cf6;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
     <!-- Main Content Area -->
-    <div id="main-content" class="hidden flex-grow flex flex-col">
+    <div id="main-content" style="display: none;" class="flex-grow flex flex-col">
         <!-- Navigation Bar -->
         <header id="main-header" class="bg-gray-900/80 backdrop-blur-md border-b border-gray-800">
             <nav class="container mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -68,11 +76,11 @@
             </nav>
         </header>
 
-        <!-- App Container (Homepage, Library, Details) -->
+        <!-- App Container (Homepage, Library, Details, Reader) -->
         <div id="app" class="container mx-auto p-4 sm:p-6 lg:p-8 flex-grow"></div>
 
         <!-- Footer -->
-        <footer class="w-full bg-gray-900/80 border-t border-gray-800 mt-12">
+        <footer id="main-footer" class="w-full bg-gray-900/80 border-t border-gray-800 mt-12">
             <div class="container mx-auto py-4 px-4 text-center text-gray-400 text-sm">
                 <p>&copy; 2025 Your Comic Collection. All Rights Reserved.</p>
             </div>
@@ -80,12 +88,12 @@
     </div>
     
     <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 bg-gray-900 z-[100] flex items-center justify-center p-4">
+    <div id="login-screen" style="display: flex;" class="fixed inset-0 bg-gray-900 z-[100] items-center justify-center p-4">
         <div class="w-full max-w-sm text-center">
             <h1 class="text-4xl font-bold text-purple-500 mb-8">MyComics</h1>
             <p class="text-gray-400 mb-4">This site is private. Please enter the password to continue.</p>
             <form id="login-form">
-                <input type="password" id="password-input" placeholder="Password" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4">
+                <input type="password" id="password-input" placeholder="Password" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4" autocomplete="current-password">
                 <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg text-lg">Enter</button>
             </form>
             <p id="error-message" class="text-red-500 mt-4 h-5"></p>
