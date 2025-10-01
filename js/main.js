@@ -1,11 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- IMPORTANT: SET YOUR PASSWORD HERE ---
+    const CORRECT_PASSWORD = '9767600358'; // <-- CHANGE THIS!
+    // -----------------------------------------
+
     // --- App State ---
     const app = document.getElementById('app');
     const siteTitle = document.getElementById('site-title');
     const header = document.getElementById('main-header');
     const backButtonContainer = document.getElementById('back-button-container');
     const readerModal = document.getElementById('readerModal');
+    const loginScreen = document.getElementById('login-screen');
+    const mainContent = document.getElementById('main-content');
+    const loginForm = document.getElementById('login-form');
+    const passwordInput = document.getElementById('password-input');
+    const errorMessage = document.getElementById('error-message');
     let allComics = [];
+
+    // --- Authentication Logic ---
+    const checkAuth = () => {
+        if (sessionStorage.getItem('isAuthenticated') === 'true') {
+            loginScreen.classList.add('hidden');
+            mainContent.classList.remove('hidden');
+            mainContent.classList.add('flex');
+            init(); // Initialize the app content
+        } else {
+            loginScreen.classList.remove('hidden');
+            mainContent.classList.add('hidden');
+            mainContent.classList.remove('flex');
+        }
+    };
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (passwordInput.value === CORRECT_PASSWORD) {
+            sessionStorage.setItem('isAuthenticated', 'true');
+            checkAuth();
+        } else {
+            errorMessage.textContent = 'Incorrect password. Please try again.';
+            passwordInput.value = '';
+        }
+    });
 
     // --- Utility Functions ---
     const showLoader = () => {
@@ -172,8 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 pageIndicatorEl.textContent = `Page ${currentPage + 1} of ${chapter.pages.length}`;
                 prevPageBtn.disabled = currentPage === 0;
                 nextPageBtn.disabled = currentPage === chapter.pages.length - 1;
-                 prevPageBtn.classList.toggle('opacity-50', currentPage === 0);
-                nextPageBtn.classList.toggle('opacity-50', currentPage === chapter.pages.length - 1);
             }
         };
 
@@ -220,7 +252,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    let isInitialized = false;
     const init = async () => {
+        if (isInitialized) return; // Prevent re-initializing
+        isInitialized = true;
         try {
             const res = await fetch(`comics.json?v=${new Date().getTime()}`);
             if (!res.ok) throw new Error('Could not fetch comics.json');
@@ -235,13 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
             window.addEventListener('hashchange', router);
             siteTitle.addEventListener('click', () => window.location.hash = '#/');
             router();
-        } catch (error)
-        {
+        } catch (error) {
             console.error('Initialization failed:', error);
             app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p>Check console for details.</p></div>`;
         }
     };
 
-    init();
+    // --- Start the App ---
+    checkAuth();
 });
-
