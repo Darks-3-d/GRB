@@ -205,12 +205,15 @@ document.addEventListener('DOMContentLoaded', () => {
             clearTimeout(uiTimeout);
             uiTimeout = setTimeout(hideControls, 3000);
         };
-        const toggleControls = () => {
-            readerSidebar.classList.toggle('hidden-sidebar');
-             if(!readerSidebar.classList.contains('hidden-sidebar')) {
-                showControls(); // If we un-hid it, start the timer
-            } else {
-                clearTimeout(uiTimeout); // If we hid it manually, stop the timer
+        const toggleControls = (e) => {
+            // Only toggle if clicking the container, not the sidebar itself
+            if (e.target === readerContainer) {
+                readerSidebar.classList.toggle('hidden-sidebar');
+                if(!readerSidebar.classList.contains('hidden-sidebar')) {
+                    showControls(); // If we un-hid it, start the timer
+                } else {
+                    clearTimeout(uiTimeout); // If we hid it manually, stop the timer
+                }
             }
         };
 
@@ -239,5 +242,56 @@ document.addEventListener('DOMContentLoaded', () => {
             showControls();
         };
 
-        const closeReader = ().
+        const closeReader = () => {
+            readerModal.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+            clearTimeout(uiTimeout);
+        };
+
+        readerContainer.onclick = toggleControls;
+        webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
+        document.getElementById('closeReader').onclick = closeReader;
+        prevPageBtn.onclick = () => { if (currentPage > 0) { currentPage--; updatePage(); showControls(); }};
+        nextPageBtn.onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; updatePage(); showControls(); }};
+        
+        chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
+        switchMode('paged');
+        readerModal.classList.remove('hidden');
+        showControls();
+    };
+    
+    // --- Router and Initialization ---
+    const router = () => {
+        const path = window.location.hash.substring(2);
+        if (path === 'library') {
+            renderLibraryPage();
+        } else if (path.startsWith('comic/')) {
+            renderDetailsPage(path.split('/')[1]);
+        } else {
+            renderHomepage();
+        }
+    };
+
+    const init = async () => {
+        isInitialized = true;
+        try {
+            const res = await fetch(`comics.json?v=${new Date().getTime()}`);
+            if (!res.ok) throw new Error('Could not fetch comics.json');
+            const comicList = await res.json();
+            const comicDetailsPromises = comicList.map(item => 
+                fetch(`${item.path}?v=${new Date().getTime()}`).then(res => res.json())
+            );
+            allComics = await Promise.all(comicDetailsPromises);
+            window.addEventListener('hashchange', router);
+            siteTitle.addEventListener('click', () => window.location.hash = '#/');
+            router();
+        } catch (error) {
+            console.error('Initialization failed:', error);
+            app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p>Check console for details.</p></div>`;
+        }
+    };
+
+    // --- Start the App ---
+    checkAuth();
+});
 
