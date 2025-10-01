@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const passwordInput = document.getElementById('password-input');
     const errorMessage = document.getElementById('error-message');
     let allComics = [];
-    let isInitialized = false; // Flag to prevent multiple initializations
+    let isInitialized = false;
 
     // --- Authentication Logic ---
     const handleLogin = () => {
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mainContent.classList.remove('hidden');
         mainContent.classList.add('flex');
         if (!isInitialized) {
-            init(); // Initialize the app content only once
+            init();
         }
     };
 
@@ -65,24 +65,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearBackButton = () => { backButtonContainer.innerHTML = ''; };
     
     // --- Rendering Functions ---
-
     const renderHomepage = () => {
         clearBackButton();
         showLoader();
-
         if (allComics.length === 0) {
             app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold">No Comics Found</h2></div>`;
             return;
         }
-
         const sortedComics = [...allComics].sort((a, b) => {
             const lastA = a.chapters.length > 0 ? new Date(a.chapters[a.chapters.length - 1].publishDate) : new Date(0);
             const lastB = b.chapters.length > 0 ? new Date(b.chapters[b.chapters.length - 1].publishDate) : new Date(0);
             return lastB - lastA;
         });
-        
         const latestUpdates = sortedComics.slice(0, 12);
-
         app.innerHTML = `
             <main class="space-y-16">
                 <div>
@@ -142,9 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoader();
         const comic = allComics.find(c => c.id === comicId);
         if (!comic) { renderHomepage(); return; }
-        
         createBackButton('Back to Home', () => window.location.hash = '#/');
-
         app.innerHTML = `
             <main>
                 <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8 md:gap-12">
@@ -162,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <h3 class="text-xl font-bold mb-2 text-gray-300">Description</h3>
                         <p class="text-gray-400 leading-relaxed mb-8">${comic.description}</p>
-                        
                         <h3 class="text-2xl font-bold mb-4 text-gray-300">Chapters</h3>
                         <ul class="bg-gray-800/50 rounded-lg border border-gray-700 max-h-[60vh] overflow-y-auto">
                            ${comic.chapters.map(ch => `
@@ -180,10 +172,10 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     };
 
-    // --- READER LOGIC ---
+    // --- IMMERSIVE READER LOGIC ---
+    let uiTimeout;
     window.openReader = (comicId, chapterNum) => {
-        document.body.classList.add('modal-open'); 
-
+        document.body.classList.add('modal-open');
         const comic = allComics.find(c => c.id === comicId);
         const chapter = comic.chapters.find(ch => String(ch.chapter) === String(chapterNum));
         if (!comic || !chapter) return;
@@ -191,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentPage = 0;
         let readerMode = 'paged';
         
+        const readerSidebar = document.getElementById('readerSidebar');
         const chapterTitleEl = document.getElementById('chapterTitle');
         const pageIndicatorEl = document.getElementById('pageIndicator');
         const readerContainer = document.getElementById('readerContainer');
@@ -206,6 +199,21 @@ document.addEventListener('DOMContentLoaded', () => {
         ).join('');
         chapterSelectEl.onchange = (e) => openReader(comicId, e.target.value);
 
+        const hideControls = () => readerSidebar.classList.add('hidden-sidebar');
+        const showControls = () => {
+            readerSidebar.classList.remove('hidden-sidebar');
+            clearTimeout(uiTimeout);
+            uiTimeout = setTimeout(hideControls, 3000);
+        };
+        const toggleControls = () => {
+            readerSidebar.classList.toggle('hidden-sidebar');
+             if(!readerSidebar.classList.contains('hidden-sidebar')) {
+                showControls(); // If we un-hid it, start the timer
+            } else {
+                clearTimeout(uiTimeout); // If we hid it manually, stop the timer
+            }
+        };
+
         const updatePage = () => {
             if (readerMode === 'paged') {
                 readerContentEl.innerHTML = `<img src="${chapter.pages[currentPage]}" alt="Page ${currentPage + 1}" class="max-w-full h-auto object-contain mx-auto">`;
@@ -218,8 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const switchMode = (mode) => {
             readerMode = mode;
             webtoonToggle.checked = (mode === 'webtoon');
-            readerContainer.scrollTop = 0; 
-
+            readerContainer.scrollTop = 0;
             if (mode === 'webtoon') {
                 pageNavButtons.style.display = 'none';
                 pageIndicatorEl.style.display = 'none';
@@ -229,58 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 pageIndicatorEl.style.display = 'block';
                 updatePage();
             }
+            showControls();
         };
 
-        const closeReader = () => {
-            readerModal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-        };
-
-        webtoonToggle.onchange = () => switchMode(webtoonToggle.checked ? 'webtoon' : 'paged');
-        document.getElementById('closeReader').onclick = closeReader;
-        prevPageBtn.onclick = () => { if (currentPage > 0) { currentPage--; updatePage(); }};
-        nextPageBtn.onclick = () => { if (currentPage < chapter.pages.length - 1) { currentPage++; updatePage(); }};
-        
-        chapterTitleEl.textContent = `${comic.title} - Ch. ${chapter.chapter}`;
-        switchMode('paged');
-        readerModal.classList.remove('hidden');
-    };
-    
-    // --- Router and Initialization ---
-    const router = () => {
-        const path = window.location.hash.substring(2);
-        if (path === 'library') {
-            renderLibraryPage();
-        } else if (path.startsWith('comic/')) {
-            renderDetailsPage(path.split('/')[1]);
-        } else {
-            renderHomepage();
-        }
-    };
-
-    const init = async () => {
-        isInitialized = true;
-        try {
-            const res = await fetch(`comics.json?v=${new Date().getTime()}`);
-            if (!res.ok) throw new Error('Could not fetch comics.json');
-            const comicList = await res.json();
-            
-            const comicDetailsPromises = comicList.map(item => 
-                fetch(`${item.path}?v=${new Date().getTime()}`).then(res => res.json())
-            );
-            
-            allComics = await Promise.all(comicDetailsPromises);
-
-            window.addEventListener('hashchange', router);
-            siteTitle.addEventListener('click', () => window.location.hash = '#/');
-            router();
-        } catch (error) {
-            console.error('Initialization failed:', error);
-            app.innerHTML = `<div class="text-center py-40"><h2 class="text-2xl font-bold text-red-500">Error: Could not load comic library.</h2><p>Check console for details.</p></div>`;
-        }
-    };
-
-    // --- Start the App ---
-    checkAuth();
-});
+        const closeReader = ().
 
