@@ -86,25 +86,35 @@
         </footer>
     </div>
 
-    <!-- REBUILT READER MODAL -->
-    <div id="readerModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-col">
-        <!-- Reader Controls -->
-        <div id="reader-controls" class="w-full bg-gray-900/80 backdrop-blur-md p-3 flex justify-between items-center z-10 gap-2 flex-shrink-0 border-b border-gray-700">
-            <button id="closeReader" aria-label="Close reader" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close</button>
-            <div class="text-center overflow-hidden whitespace-nowrap text-ellipsis">
-                <h2 id="chapterTitle" class="text-lg font-semibold"></h2>
-                <div id="pageIndicator" class="text-sm text-gray-300"></div>
+    <!-- REBUILT READER MODAL (SIDEBAR LAYOUT) -->
+    <div id="readerModal" class="fixed inset-0 bg-black/90 z-50 hidden flex-row">
+        <!-- Reader Sidebar -->
+        <div class="w-72 bg-gray-900/80 backdrop-blur-md flex flex-col flex-shrink-0 border-r border-gray-700 p-4 space-y-6">
+            <div class="text-center">
+                <h2 id="chapterTitle" class="text-xl font-semibold truncate"></h2>
+                <div id="pageIndicator" class="text-sm text-gray-400 mt-1"></div>
             </div>
-            <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-                <div class="flex items-center space-x-2">
-                    <span class="text-sm font-medium text-gray-300">Webtoon</span>
+
+            <div class="space-y-4">
+                 <div>
+                    <label for="chapterSelect" class="block text-sm font-medium text-gray-400 mb-1">Chapter</label>
+                    <select id="chapterSelect" aria-label="Select chapter" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
+                 </div>
+                 <div class="flex justify-between items-center bg-gray-800/50 p-2 rounded-lg">
+                    <span class="text-sm font-medium text-gray-300">Webtoon Mode</span>
                     <label for="webtoonToggle" class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="webtoonToggle" class="sr-only peer">
                         <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-purple-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                 </div>
-                <select id="chapterSelect" aria-label="Select chapter" class="bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"></select>
             </div>
+            
+            <!-- Page Navigation -->
+            <div id="page-nav-buttons" class="mt-auto space-y-2">
+                <button id="nextPage" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Next &rarr;</button>
+                <button id="prevPage" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">&larr; Prev</button>
+            </div>
+             <button id="closeReader" aria-label="Close reader" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Close Reader</button>
         </div>
 
         <!-- Reader Content (Isolated Scrolling) -->
@@ -112,12 +122,6 @@
             <div id="readerContent" class="py-4">
                 <!-- Comic pages will be injected here -->
             </div>
-        </div>
-        
-        <!-- Reader Page Navigation -->
-        <div id="page-nav-buttons" class="w-full bg-gray-900/80 backdrop-blur-md p-3 flex justify-center space-x-4 flex-shrink-0 border-t border-gray-700">
-            <button id="prevPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">&larr; Prev</button>
-            <button id="nextPage" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">Next &rarr;</button>
         </div>
     </div>
     
