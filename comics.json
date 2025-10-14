@@ -26,7 +26,7 @@
   {
     "path": "comics/loutofcountsfamily.json"
   },
-   {
+  {
     "path": "comics/thestellarswordmaster.json"
   },
   {
@@ -34,11 +34,5 @@
   },
   {
     "path": "comics/returnofthemounthuasect1.json"
-  },
-  {
-    "path": "comics/thestellarswordmaster.json"
-  },
-  {
-    "path": "comics/reincarnatedmurimlord-comic.json"
   }
 ]
