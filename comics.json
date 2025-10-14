@@ -1,38 +1,39 @@
 [
   {
-    "path": "comics/my-first-comic.json"
-  },
-  {
     "path": "comics/another-comic.json"
-  },
-  {
-    "path": "comics/sololeveling.json"
-  },
-  {
-    "path": "comics/murimlogin.json"
-  },
-  {
-    "path": "comics/theundefeatableswordsman.json"
   },
   {
     "path": "comics/drstone.json"
   },
   {
-    "path": "comics/omniscientreader.json"
-  },
-  {
-    "path": "comics/returnofthemounthuasect.json"
-  },
-  {
     "path": "comics/loutofcountsfamily.json"
   },
   {
-    "path": "comics/thestellarswordmaster.json"
+    "path": "comics/murimlogin.json"
+  },
+  {
+    "path": "comics/my-first-comic.json"
+  },
+  {
+    "path": "comics/omniscientreader.json"
   },
   {
     "path": "comics/reincarnatedmurimlord-comic.json"
   },
   {
+    "path": "comics/returnofthemounthuasect.json"
+  },
+  {
     "path": "comics/returnofthemounthuasect1.json"
+  },
+  {
+    "path": "comics/sololeveling.json"
+  },
+  {
+    "path": "comics/thestellarswordmaster.json"
+  },
+  {
+    "path": "comics/theundefeatableswordsman.json"
   }
 ]
+
